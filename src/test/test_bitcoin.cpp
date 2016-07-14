@@ -96,41 +96,6 @@ TestingSetup::~TestingSetup()
         boost::filesystem::remove_all(pathTemp);
 }
 
-WalletSetup::WalletSetup(const std::string& chainName) : BasicTestingSetup(chainName)
-{
-	ClearDatadirCache();
-	pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
-	boost::filesystem::create_directories(pathTemp);
-	mapArgs["-datadir"] = pathTemp.string();
-#ifdef ENABLE_WALLET
-	bool fFirstRun;
-	pwalletMain = new CWallet("wallet.dat");
-	pwalletMain->LoadWallet(fFirstRun);
-	pwalletMain->TopUpKeyPool(5);
-	RegisterValidationInterface(pwalletMain);
-#endif
-}
-
-WalletSetup::~WalletSetup()
-{
-#ifdef ENABLE_WALLET
-	UnregisterValidationInterface(pwalletMain);
-	delete pwalletMain;
-	pwalletMain = NULL;
-	bitdb.Flush(true);
-	bitdb.Reset();
-#endif
-
-	/*
-	 * Attempting to remove Berkeley DB related files in windows
-	 * errors while running wallet tests. Delete only on
-	 * non windows platforms for now (files are created in tmp)
-	 */
-#ifndef WIN32
-	boost::filesystem::remove_all(pathTemp);
-#endif
-}
-
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
     // Generate a 100-block chain:
